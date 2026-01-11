@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { DISC_QUESTIONS, DISC_DESCRIPTIONS } from './constants';
 import { DiscType, DiscResults, Message } from './types';
@@ -176,7 +177,7 @@ const App: React.FC = () => {
             <div>
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold mb-6 text-slate-900 leading-[1.1]">Atrodi savu darba <span className="text-teal-600">superjaudu</span>.</h2>
               <p className="text-slate-500 mb-10 max-w-2xl mx-auto text-base sm:text-xl leading-relaxed px-4">
-                Izmanto padziļināto DISC analīzi, lai precīzi noteiktu savu personības tipu un saņemtu individuālus mentora padomus.
+                Izmanto padziļināto DISC analīzi, lai precīzi noteiktu savu personības tipu un saņemtu individuālos mentora padomus par Tev piemērotāko darba vidi.
               </p>
               
               <div className="flex flex-col items-center gap-6">
