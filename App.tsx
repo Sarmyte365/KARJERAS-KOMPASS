@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { DISC_QUESTIONS, DISC_DESCRIPTIONS } from './constants';
 import { DiscType, DiscResults, Message } from './types';
@@ -7,6 +6,7 @@ import { getCareerAdvice, generateCareerVision } from './services/geminiService'
 
 const App: React.FC = () => {
   const [step, setStep] = useState<'intro' | 'test' | 'results' | 'chat'>('intro');
+  const [userName, setUserName] = useState('');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<DiscType[]>([]);
   const [results, setResults] = useState<DiscResults | null>(null);
@@ -108,22 +108,8 @@ const App: React.FC = () => {
     setStep('chat');
     setIsTyping(true);
     
-    const sorted = getSortedTraits();
-    const dominant = sorted[0][0] as keyof typeof DiscType;
-    const secondary = sorted[1][0] as keyof typeof DiscType;
-    const lowTraits = getLowTraits();
-
-    let praiseText = `Tev piemīt unikāla ${DiscType[dominant]} un ${DiscType[secondary]} kombinācija. `;
-    if (dominant === 'D' && secondary === 'C') praiseText += "Tu esi stratēģisks spēks – apvieno ātrumu ar augstākajiem kvalitātes standartiem.";
-    else if (dominant === 'I' && secondary === 'S') praiseText += "Tava spēja saliedēt komandu un radīt drošu, pozitīvu atmosfēru ir neatsverama.";
-    else if (dominant === 'D' && secondary === 'I') praiseText += "Tava enerģija un harizma spēj aizraut jebkuru mērķu sasniegšanai.";
-    else if (dominant === 'C' && secondary === 'S') praiseText += "Tava uzticamība un analītiskais dziļums nodrošina stabilitāti jebkurā sistēmā.";
-    else praiseText += "Tavs personības profils rāda spēcīgu līdzsvaru starp personiskajām ambīcijām un darba efektivitāti.";
-
-    const initialPrompt: Message[] = [
-      { role: 'model', text: `Sveiki! Esmu izpētījis Tavus rezultātus. ${praiseText} Ņemot vērā Tavas dominējošās iezīmes un to, ka Tev šobrīd mazāk izteiktas ir ${lowTraits.map(([k]) => DiscType[k as keyof typeof DiscType]).join(', ')} īpašības, gribētu pajautāt – kāda darba vide Tev šķiet visnogurdinošākā? Vai Tev šobrīd ir hobiji, kuros Tu jūties pilnīgi brīvs no darba stresa?` }
-    ];
-    setChatMessages(initialPrompt);
+    const responseText = await getCareerAdvice(results, [], userName);
+    setChatMessages([{ role: 'model', text: responseText || "Sveiks! Esmu Tavs mentors. Kā varu Tev palīdzēt?" }]);
     setIsTyping(false);
   };
 
@@ -135,7 +121,7 @@ const App: React.FC = () => {
     setInputText('');
     setIsTyping(true);
 
-    const responseText = await getCareerAdvice(results, [...chatMessages, userMsg]);
+    const responseText = await getCareerAdvice(results, [...chatMessages, userMsg], userName);
     
     setChatMessages(prev => [...prev, { role: 'model', text: responseText || "Atvainojiet, nevarēju saņemt atbildi." }]);
     setIsTyping(false);
@@ -186,17 +172,38 @@ const App: React.FC = () => {
 
       <main className="flex-1 bg-white rounded-2xl sm:rounded-[2.5rem] shadow-2xl shadow-teal-900/5 border border-slate-100 overflow-hidden flex flex-col">
         {step === 'intro' && (
-          <div className="p-6 sm:p-10 lg:p-16 text-center">
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold mb-6 text-slate-900 leading-[1.1]">Atrodi savu darba <span className="text-teal-600">superjaudu</span>.</h2>
-            <p className="text-slate-500 mb-10 max-w-2xl mx-auto text-base sm:text-xl leading-relaxed px-4">
-              Izmanto padziļināto DISC analīzi, lai precīzi noteiktu savu personības tipu un saņemtu individuālus mentora padomus par Tev piemērotāko darba vidi.
-            </p>
-            <button 
-              onClick={() => setStep('test')}
-              className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white font-bold py-5 px-14 rounded-xl sm:rounded-2xl transition-all shadow-xl shadow-teal-200 hover:scale-[1.03] active:scale-[0.97] text-lg"
-            >
-              Sākt testu
-            </button>
+          <div className="p-6 sm:p-10 lg:p-16 text-center flex flex-col min-h-[500px] justify-between">
+            <div>
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold mb-6 text-slate-900 leading-[1.1]">Atrodi savu darba <span className="text-teal-600">superjaudu</span>.</h2>
+              <p className="text-slate-500 mb-10 max-w-2xl mx-auto text-base sm:text-xl leading-relaxed px-4">
+                Izmanto padziļināto DISC analīzi, lai precīzi noteiktu savu personības tipu un saņemtu individuālus mentora padomus.
+              </p>
+              
+              <div className="flex flex-col items-center gap-6">
+                <div className="w-full max-w-xs">
+                  <input 
+                    type="text" 
+                    placeholder="Tavs vārds" 
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    className="w-full text-center py-4 px-6 rounded-2xl border-2 border-slate-100 focus:outline-none focus:border-teal-500 bg-slate-50 text-lg font-bold transition-all"
+                  />
+                </div>
+                <button 
+                  onClick={() => setStep('test')}
+                  disabled={!userName.trim()}
+                  className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white font-bold py-5 px-14 rounded-xl sm:rounded-2xl transition-all shadow-xl shadow-teal-200 hover:scale-[1.03] active:scale-[0.97] text-lg disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  Sākt testu
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-20">
+              <p className="text-slate-400 text-xs sm:text-sm max-w-md mx-auto italic">
+                Privātums: Tavi dati ir konfidenciāli. Šī lietotne nesaglabā Tavas atbildes un neizmanto tās mārketinga mērķiem.
+              </p>
+            </div>
           </div>
         )}
 
@@ -244,7 +251,7 @@ const App: React.FC = () => {
           <div className="p-6 sm:p-10 lg:p-16 overflow-y-auto">
             <div className="text-center mb-10 sm:mb-16">
               <span className="bg-teal-50 text-teal-600 px-5 py-2 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] mb-4 inline-block">
-                Identificētais profils
+                Sveiks, {userName}! Tavs profils ir
               </span>
               <h2 className="text-7xl sm:text-9xl font-black text-slate-900 leading-none tracking-tighter">
                 {getDiscCode()}
@@ -416,7 +423,7 @@ const App: React.FC = () => {
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Kādas ir Tavas karjeras lielākās grūtības?"
+                  placeholder=""
                   className="flex-1 py-4 sm:py-6 px-6 sm:px-10 rounded-2xl border-2 border-slate-100 focus:outline-none focus:border-teal-500 bg-slate-50 text-base sm:text-xl font-medium transition-all"
                 />
                 <button
