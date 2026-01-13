@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { DISC_QUESTIONS, DISC_DESCRIPTIONS } from './constants';
 import { DiscType, DiscResults, Message } from './types';
@@ -442,7 +441,7 @@ const App: React.FC = () => {
 
       <footer className="mt-8 sm:mt-12 text-center pb-8">
         <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em]">
-          Powered by Gemini AI
+          Powered by <a href="https://www.threads.net/@sarmyte" target="_blank" rel="noopener noreferrer" className="hover:text-teal-600 transition-colors">@Sarmyte</a>
         </p>
         <p className="text-slate-400 text-[10px] font-medium mt-1">&copy; 2026</p>
       </footer>
